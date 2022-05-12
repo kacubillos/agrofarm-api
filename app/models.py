@@ -29,3 +29,33 @@ class Admin(db.Model):
         db.session.commit()
 
         return admin
+
+    @classmethod
+    def get_by_id(cls, id):
+        return Admin.query.filter_by(id=id).first()
+
+    @classmethod
+    def update_admin(cls, id, name, email):
+        admin = Admin.get_by_id(id)
+
+        if admin is None:
+            return False
+
+        admin.name = name
+        admin.email = email
+
+        db.session.commit()
+
+        return admin
+
+    @classmethod
+    def delete_admin(cls, id):
+        admin = Admin.get_by_id(id)
+
+        if admin is None:
+            return False
+
+        db.session.delete(admin)
+        db.session.commit()
+
+        return admin
