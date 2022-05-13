@@ -1,10 +1,12 @@
 from flask import Blueprint, jsonify, request
 
-from app.models import Admin, Article
-from app.schemas import AdminSchema, ArticleSchema
+from app.models import Admin, Article, Farmer, Crop
+from app.schemas import AdminSchema, ArticleSchema, FarmerSchema, CropSchema
 
 admin_schema = AdminSchema()
+farmer_schema = FarmerSchema()
 article_schema = ArticleSchema()
+crop_schema = CropSchema()
 
 page = Blueprint('page', __name__)
 
@@ -50,6 +52,40 @@ def delete_admin(admin_id):
     admin = Admin.delete_element(admin_id)
     return admin_schema.jsonify(admin)
 
+""" FARMERS ROUTES """
+
+@page.route('/api/farmers/', methods=['GET', 'POST'])
+def farmers():
+    if request.method == 'POST':
+        name = request.json['name']
+        email = request.json['email']
+        password = request.json['password']
+
+        farmer = Farmer.create_element(name, email, password)
+        return farmer_schema.jsonify(farmer), 201
+
+    all_farmers = Farmer.query.all()
+    result = farmer_schema.dump(all_farmers, many=True)
+    return jsonify(result)
+
+@page.route('/api/farmers/<int:farmer_id>')
+def get_farmer(farmer_id):
+    farmer = Farmer.query.get_or_404(farmer_id)
+    return farmer_schema.jsonify(farmer)
+
+@page.route('/api/farmers/<int:farmer_id>', methods=['PUT'])
+def update_farmer(farmer_id):
+    name = request.json['name']
+    email = request.json['email']
+
+    admin = Farmer.update_element(farmer_id, name, email)
+    return admin_schema.jsonify(admin)
+
+@page.route('/api/farmers/<int:farmer_id>', methods=['DELETE'])
+def delete_farmer(farmer_id):
+    farmer = Farmer.delete_element(farmer_id)
+    return admin_schema.jsonify(farmer)
+
 """ ARTICLES ROUTES """
 
 @page.route('/api/articles/')
@@ -89,3 +125,41 @@ def update_article(article_id):
 def delete_article(article_id):
     article = Article.delete_article(article_id)
     return article_schema.jsonify(article)
+
+""" ARTICLES ROUTES """
+
+@page.route('/api/crops/')
+def get_crops():
+    all_crops = Crop.query.all()
+    result = crop_schema.dump(all_crops, many=True)
+    return jsonify(result)
+
+@page.route('/api/crops/<int:crop_id>')
+def get_crop(crop_id):
+    crop = Crop.query.get_or_404(crop_id)
+    return crop_schema.jsonify(crop)
+
+@page.route('/api/crops/', methods=['POST'])
+def create_crop():
+    title = request.json['title']
+    crop_type = request.json['crop_type']
+    seedtime = request.json['seedtime']
+    farmer_id = request.json['farmer_id']
+
+    crop = Crop.create_crop(title, crop_type, seedtime , farmer_id)
+    return crop_schema.jsonify(crop), 201
+
+@page.route('/api/crops/<int:crop_id>', methods=['PUT'])
+def update_crop(crop_id):
+    title = request.json['title']
+    crop_type = request.json['crop_type']
+    seedtime = request.json['seedtime']
+    farmer_id = request.json['farmer_id']
+
+    crop = Crop.update_crop(crop_id, title, crop_type, seedtime , farmer_id)
+    return crop_schema.jsonify(crop)
+
+@page.route('/api/crops/<int:crop_id>', methods=['DELETE'])
+def delete_crop(crop_id):
+    crop = Crop.delete_crop(crop_id)
+    return crop_schema.jsonify(crop)
