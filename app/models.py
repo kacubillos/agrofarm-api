@@ -1,12 +1,10 @@
 import datetime
 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from . import db
 
-class Admin(db.Model):
-    __tablename__ = 'admins'
-
+class UserBaseModel:
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(100), unique=True, nullable=True)
@@ -21,41 +19,102 @@ class Admin(db.Model):
     def password(self, value):
         self.password_encrypted = generate_password_hash(value)
 
-    @classmethod
-    def create_admin(cls, name, email, password):
-        admin = Admin(name=name, email=email, password=password)
+    def verify_password(self, password):
+        return check_password_hash(self.password_encrypted, password)
 
-        db.session.add(admin)
+    @classmethod
+    def create_element(cls, name, email, password):
+        user = cls(name=name, email=email, password=password)
+
+        db.session.add(user)
         db.session.commit()
 
-        return admin
+        return user
 
     @classmethod
     def get_by_id(cls, id):
-        return Admin.query.filter_by(id=id).first()
+        return cls.query.filter_by(id=id).first()
 
     @classmethod
-    def update_admin(cls, id, name, email):
-        admin = Admin.get_by_id(id)
+    def update_element(cls, id, name, email):
+        user = cls.get_by_id(id)
 
-        if admin is None:
+        if user is None:
             return False
 
-        admin.name = name
-        admin.email = email
+        user.name = name
+        user.email = email
 
         db.session.commit()
 
-        return admin
+        return user
 
     @classmethod
-    def delete_admin(cls, id):
-        admin = Admin.get_by_id(id)
+    def delete_element(cls, id):
+        user = cls.get_by_id(id)
 
-        if admin is None:
+        if user is None:
             return False
 
-        db.session.delete(admin)
+        db.session.delete(user)
         db.session.commit()
 
-        return admin
+        return user
+
+class Admin(UserBaseModel, db.Model):
+    __tablename__ = 'admins'
+
+    articles = db.relationship('Article')
+
+class Article(db.Model):
+    __tablename__ = 'articles'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(50), nullable=True)
+    description = db.Column(db.String(100), nullable=True)
+    url_image = db.Column(db.String(), nullable=True)
+    content = db.Column(db.Text(), nullable=True)
+    author_id = db.Column(db.Integer, db.ForeignKey('admins.id'))
+    published_at = db.Column(db.DateTime, default=datetime.datetime.now())
+
+    @classmethod
+    def create_article(cls, title, description, url_image , content, author_id):
+        article = Article(title=title, description=description, url_image=url_image , content=content, author_id=author_id)
+
+        db.session.add(article)
+        db.session.commit()
+
+        return article
+
+    @classmethod
+    def get_by_id(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def update_article(cls, id, title, description, url_image, content, author_id):
+        user = cls.get_by_id(id)
+
+        if user is None:
+            return False
+
+        user.title = title
+        user.description = description
+        user.url_image = url_image
+        user.content = content
+        user.author_id = author_id
+
+        db.session.commit()
+
+        return user
+
+    @classmethod
+    def delete_article(cls, id):
+        user = cls.get_by_id(id)
+
+        if user is None:
+            return False
+
+        db.session.delete(user)
+        db.session.commit()
+
+        return user

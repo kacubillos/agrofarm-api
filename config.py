@@ -11,6 +11,8 @@ class DevelopmentConfig(Config):
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SHOW_SQLALCHEMY_LOG_MESSAGES = False
 
+    JSON_SORT_KEYS = False
+
 config = {
     'development': DevelopmentConfig,
     'default': DevelopmentConfig
