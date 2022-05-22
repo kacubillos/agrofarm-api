@@ -66,6 +66,11 @@ class Admin(UserBaseModel, db.Model):
 
     articles = db.relationship('Article')
 
+class Farmer(UserBaseModel, db.Model):
+    __tablename__ = 'farmers'
+
+    crops = db.relationship('Crop')
+
 class Article(db.Model):
     __tablename__ = 'articles'
 
@@ -109,6 +114,57 @@ class Article(db.Model):
 
     @classmethod
     def delete_article(cls, id):
+        user = cls.get_by_id(id)
+
+        if user is None:
+            return False
+
+        db.session.delete(user)
+        db.session.commit()
+
+        return user
+
+class Crop(db.Model):
+    __tablename__ = 'crops'
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(50), nullable=True)
+    crop_type = db.Column(db.String(30), nullable=True)
+    seedtime = db.Column(db.DateTime)
+    farmer_id = db.Column(db.Integer, db.ForeignKey('farmers.id'))
+    created_at = db.Column(db.DateTime, default=datetime.datetime.now())
+
+    @classmethod
+    def create_crop(cls, title, crop_type, seedtime, farmer_id):
+        crop = Crop(title=title, crop_type=crop_type, seedtime=seedtime, farmer_id=farmer_id)
+
+        db.session.add(crop)
+        db.session.commit()
+
+        return crop
+
+    @classmethod
+    def get_by_id(cls, id):
+        return cls.query.filter_by(id=id).first()
+
+    @classmethod
+    def update_crop(cls, id, title, crop_type, seedtime, farmer_id):
+        crop = cls.get_by_id(id)
+
+        if crop is None:
+            return False
+
+        crop.title = title
+        crop.crop_type = crop_type
+        crop.seedtime = seedtime
+        crop.farmer_id = farmer_id
+
+        db.session.commit()
+
+        return crop
+
+    @classmethod
+    def delete_crop(cls, id):
         user = cls.get_by_id(id)
 
         if user is None:
